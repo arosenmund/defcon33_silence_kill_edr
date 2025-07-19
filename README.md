@@ -1,4 +1,4 @@
-# Abastract
+# Abstract
 
 
 Gain a deeper understanding of how ransomware evades analysis and learn how to identify and counter these techniques. This workshop will explore common evasion methods, how they work, and how you can develop the skills to write code that re-enacts these methods. This workshop will begin by showing you how ransomware builders work. How do the builders generate reliable, viable ransomware code? You’ll learn! Once built, how do these malicious binaries implement analysis evasion techniques? Which techniques are used often? How do they function? We'll dive into the most prevalent techniques to show you how they work and why. Finally, you will learn how to re-enact some of these techniques along with more advanced methods within your own code. Are you ready to take your reverse engineering and coding skills to the next levels? – Let’s do this! And remember: #RansomwareSucks!
