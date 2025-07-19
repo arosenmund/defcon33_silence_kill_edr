@@ -4,62 +4,62 @@
 Gain a deeper understanding of how ransomware evades analysis and learn how to identify and counter these techniques. This workshop will explore common evasion methods, how they work, and how you can develop the skills to write code that re-enacts these methods. This workshop will begin by showing you how ransomware builders work. How do the builders generate reliable, viable ransomware code? You’ll learn! Once built, how do these malicious binaries implement analysis evasion techniques? Which techniques are used often? How do they function? We'll dive into the most prevalent techniques to show you how they work and why. Finally, you will learn how to re-enact some of these techniques along with more advanced methods within your own code. Are you ready to take your reverse engineering and coding skills to the next levels? – Let’s do this! And remember: #RansomwareSucks!
 
 
-# The Outline
-## Introduction (10 mins)
-Welcome and Introductions
- - Overview of the workshop
- - Explain the focus: Ransomware anti-analysis/evasion techniques
- - Discuss the techniques covered
- - Explain the structure: Dissect a ransomware builder > reverse engineer a ransomware binary to find evasion techniques > write custom code to implement even more advanced evasion techniques 
- - Set ground rules and expectations (active participation, respectful environment, encouraging questions and discussion!)
+I. Introduction (10 min) - Ryan & Aaron
 
-## Environment Setup (20 mins)
+A. Welcome and Introductions
+B. Overview of the workshop
+b1. Explain the focus: EDR killing and silencing – What’s the difference? Who uses these tactics? Why? etc.
+b2. Discuss the tools & techniques covered
+b3. Explain the structure: Compile/build readily-available tools > run the tools > analyze the results > write custom code to achieve same objectives > compile the code > run the code > analyze the results
+C. Set ground rules and expectations (active participation, respectful environment, encouraging questions, and discussion!)
 
-- GitHub Lab Instructions
+II. Environment Setup (20 min) - Aaron
 
-- Setup free accounts - Pluralsight Lab Environment
+A. GitHub Lab Instructions
+B. Setup free accounts - Pluralsight Lab Environment
+C. Troubleshooting
 
-- Troubleshooting
+III. Introduction to OpenEDR (https://www.openedr.com/) (45 min) - Ryan
 
-## Part 1 Ransomware Builder Analysis (1 hr) – Ryan
-- Review a ransomware builder
-- What is a builder?
-- How are builders used and why are they important?
-- Build ransomware using the builder
-- Customize the ransomware
-- Build the ransomware
-- Run the ransomware
-- Dissect the builder using Ghidra 
-- Determine how the builder uses templates to build new variants
-- Review of resource sections
-- Where are the templates stored?
-- How are the templates decoded? What algorithm(s) are used to decode the templates 
-- How do the templates eventually become stand-alone ransomware binaries?
-- Extract configuration from built ransomware
-- Where is the config stored in the binary?
-- How is the config encoded?
-- How can you decode the config in a debugger?
+A. What is OpenEDR? Why did we pick it for this workshop?
+B. How does OpenEDR operate? Where does it output logs?
+C. Running some commands > reviewing OpenEDR logs
 
-BREAK
+IV. EDR Killing & Silencing Tooling (45 min) – Ryan
 
-## Part 2 Reverse Engineering Ransomware to Find Evasion Techniques (1 hr) – Josh
-- Observing Evasion Techniques Dynamically
-- Observing process behavioral patterns
-- Identifying Evasion Techniques Using Static Analysis
-- Identifying and Understanding Evasion Techniques
-- Navigating Disassemble
-- Powering-Up with the Decompiler
-- Defeating Evasion
-- Patching binary logic
-- Adjusting analysis environment
+A. Using EDRSandBlast (https://github.com/wavestone-cdt/EDRSandblast)
+a1. Code review in Visual Studio
+a2. Building EDRSandBlast
+a3. Executing EDRSandblast > running new commands > verifying those commands are not logged
 
-BREAK
+B. BREAK!!! (15 min)
 
-## [Part 3 Writing Custom Evasion Procedures (1 hr) – Aaron](./3-custom-edr-evasion/README.md) 
+C. Implementing EDR silencing methods
+c1. EDR silencing via Add-DnsClientNrptRule (execute > analyze results)
+c2. EDR silencing via GenericDNSServers key (execute > analyze results)
+c3. EDR silencing via PendingFileRenameOperations (execute > analyze results)
 
+V. Writing an EDR killer (45 min) – Aaron
 
-Conclusion (10 mins)
+A. Writing a custom EDR killing to leverage the BYOVD technique
+a1. Review pre-provided code snippets
+a2. Augment code live in class
+a3. Goal: Show how to use vulnerable drivers to implement BYOVD
+a4. Compile custom code
+B. Kill OpenEDR using compiled code
+b1. Review results/environment
+b2. Takeaways – Difference between using readily-available tools <> custom code
 
-- Recap of the course
-- Additional resources and next steps for learning
-- Final Q&A and open discussion
+C. BREAK!!! (15 min)
+
+VI. Writing an EDR silencer (45 min) – Aaron
+
+A. Writing a custom EDR silencer
+a1. Review pre-provided code snippets
+a2. Augment code live in class
+a3. Goal: Show how to use API calls vs. living-off-the-land commands to achieve silencing
+a4. Compile custom code
+B. Silence OpenEDR using compiled code
+b1. Review results/environment
+b2. Takeaways – Difference between using readily-available tools <> custom code
+
