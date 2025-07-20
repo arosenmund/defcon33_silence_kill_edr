@@ -1,65 +1,135 @@
 # Abstract
 
+Many cybercime and APT actors kill and/or silence EDR agents in order to evade detection, allowing them to achieve their actions on objectives without notifying security teams. How do they do it? What tools do they use? How do they write those tools? What is BYOVD? If you’re interested in learning how adversaries bypass EDR platforms, this workshop is for YOU!
 
-Gain a deeper understanding of how ransomware evades analysis and learn how to identify and counter these techniques. This workshop will explore common evasion methods, how they work, and how you can develop the skills to write code that re-enacts these methods. This workshop will begin by showing you how ransomware builders work. How do the builders generate reliable, viable ransomware code? You’ll learn! Once built, how do these malicious binaries implement analysis evasion techniques? Which techniques are used often? How do they function? We'll dive into the most prevalent techniques to show you how they work and why. Finally, you will learn how to re-enact some of these techniques along with more advanced methods within your own code. Are you ready to take your reverse engineering and coding skills to the next levels? – Let’s do this! And remember: #RansomwareSucks!
+Every student who attends this workshop will have a personal lab environment generated for them. Using the online lab environment, students will review a live EDR tool in order to become familiar with its capabilities, logging, and more. Students will then compile and run an EDR killer used commonly by major threat groups. Next, students will execute commands to silence agent-to-tenant communication, thereby negating notification to security teams.
 
+Following the building, use, and analysis of readily-available tools, students will learn how to write their own code to achieve similar means. We will be using a combination of pre-provided code snippets and code we write in real-time in order to both kill and silence the provided EDR agent. Are you ready to take your reverse engineering and coding skills to the next levels? – Let’s do this! And remember: #RansomwareSucks!
 
-I. Introduction (10 min) - Ryan & Aaron
+# Workshop Outline
 
-A. Welcome and Introductions
-B. Overview of the workshop
-b1. Explain the focus: EDR killing and silencing – What’s the difference? Who uses these tactics? Why? etc.
-b2. Discuss the tools & techniques covered
-b3. Explain the structure: Compile/build readily-available tools > run the tools > analyze the results > write custom code to achieve same objectives > compile the code > run the code > analyze the results
-C. Set ground rules and expectations (active participation, respectful environment, encouraging questions, and discussion!)
+## I. Introduction (10 min) - Ryan & Aaron
 
-II. Environment Setup (20 min) - Aaron
+1. Welcome and Introductions
 
-A. GitHub Lab Instructions
-B. Setup free accounts - Pluralsight Lab Environment
-C. Troubleshooting
+2. Overview of the workshop
 
-III. Introduction to OpenEDR (https://www.openedr.com/) (45 min) - Ryan
+    1. **Our focus:** EDR killing and silencing – What’s the difference? Who uses these tactics? Why? etc.
 
-A. What is OpenEDR? Why did we pick it for this workshop?
-B. How does OpenEDR operate? Where does it output logs?
-C. Running some commands > reviewing OpenEDR logs
+    2. Discuss the tools & techniques covered
 
-IV. EDR Killing & Silencing Tooling (45 min) – Ryan
+    3. Explain the structure:
+    
+        1. Compile/build readily-available tools > Run the tools > Analyze the results
 
-A. Using EDRSandBlast (https://github.com/wavestone-cdt/EDRSandblast)
-a1. Code review in Visual Studio
-a2. Building EDRSandBlast
-a3. Executing EDRSandblast > running new commands > verifying those commands are not logged
+        2. Write custom code to achieve similar objectives to readily-available tools > Compile the code > Run the code > Analyze the results
+    
+3. Set ground rules and expectations
 
-B. BREAK!!! (15 min)
+    1. Active participation, respectful environment, questions encouraged, and discussions
 
-C. Implementing EDR silencing methods
-c1. EDR silencing via Add-DnsClientNrptRule (execute > analyze results)
-c2. EDR silencing via GenericDNSServers key (execute > analyze results)
-c3. EDR silencing via PendingFileRenameOperations (execute > analyze results)
+## II. Environment Setup (25 min) - Aaron
 
-V. Writing an EDR killer (45 min) – Aaron
+**Objective:** Get lab environment set up and functional, ready for hands-on learning
 
-A. Writing a custom EDR killing to leverage the BYOVD technique
-a1. Review pre-provided code snippets
-a2. Augment code live in class
-a3. Goal: Show how to use vulnerable drivers to implement BYOVD
-a4. Compile custom code
-B. Kill OpenEDR using compiled code
-b1. Review results/environment
-b2. Takeaways – Difference between using readily-available tools <> custom code
+1. GitHub Lab Instructions
 
-C. BREAK!!! (15 min)
+2. Pluralsight Lab Environment: Setup free accounts
 
-VI. Writing an EDR silencer (45 min) – Aaron
+3. Ensure lab is functional
 
-A. Writing a custom EDR silencer
-a1. Review pre-provided code snippets
-a2. Augment code live in class
-a3. Goal: Show how to use API calls vs. living-off-the-land commands to achieve silencing
-a4. Compile custom code
-B. Silence OpenEDR using compiled code
-b1. Review results/environment
-b2. Takeaways – Difference between using readily-available tools <> custom code
+4. Troubleshooting
 
+## III. Introduction to OpenEDR (40 min) - Ryan
+
+**Objective:** Familiarize ourselves with our target EDR: [OpenEDR](https://www.openedr.com/)
+
+1. What is OpenEDR? Why did we pick it for this workshop? What are some alternative FOSS EDRs?
+
+2. How does OpenEDR operate? Where does it output logs?
+
+3. Running some commands > Reviewing OpenEDR logs
+
+## IV. EDR Killing via EDRSandBlast (20 min) - Ryan
+
+**Objective:** Learn to kill EDR with readily-available EDR killer: [EDRSandBlast](https://github.com/wavestone-cdt/EDRSandblast)
+
+    * Seen in many incidents -- e.g. ransomware cases
+
+1. Overview of EDRSandBlast
+
+2. Code review in Visual Studio
+    
+3. Building EDRSandBlast
+
+4. Executing EDRSandblast
+
+    1. Running commands w/EDR disabled
+    
+    2. Verifying executed commands **are not** logged
+    
+5. Disabling EDRSandBlast
+    
+    1. Running commands w/EDR running
+
+    2. Verifying executed commands **are** once again logged
+
+## V. EDR Silencing Methods (25 min) – Ryan
+
+**Objective:** Show how to silence EDR communications
+
+    * Silencing = Not killing the EDR, but rather silencing comms between EDR agent and logging destination/tenant
+
+1. EDR silencing via `Add-DnsClientNrptRule`
+    
+2. EDR silencing via `GenericDNSServers` key
+    
+3. If time: EDR silencing via `PendingFileRenameOperations`
+
+## BREAK (15 min)
+
+## VI. Writing an EDR killer (45 min) – Aaron
+
+**Objective:** Show how to use vulnerable drivers to implement BYOVD
+
+1. Writing a custom EDR killer to leverage the BYOVD technique
+
+    1. Review pre-provided code snippets
+
+    2. Augment code live in class
+
+    3. Compile custom code
+
+2. Kill OpenEDR using compiled code
+
+    1. Review results/environment
+    
+    2. Takeaways – Difference between using readily-available tools vs. custom code
+
+## VII. Writing an EDR silencer (45 min) – Aaron
+
+**Goal:** Show how to use API calls vs. living-off-the-land commands to achieve silencing
+
+1. Writing a custom EDR silencer
+
+    1. Review pre-provided code snippets
+
+    2. Augment code live in class
+
+    3. Compile custom code
+
+2. Silence EDR using compiled code
+
+    1. Review results/environment
+
+    2. Takeaways – Difference between using readily-available tools <> custom code
+
+## VIII. Wrap-up (15 min) – Aaron
+
+1. Discussion
+
+2. Q&A
+
+3. Where to find Ryan & Aaron's next adventures
+
+4. Goodbyes and farewells
