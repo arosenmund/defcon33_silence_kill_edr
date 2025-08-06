@@ -21,9 +21,7 @@ Certain Windows API Calls are hooked by the EDR and the edr is waitning for you 
 ## 3 EDR Server Detections
 
 1. Firewall rule block the EDR server from the client.
-
 2. Redirect via DNS or local mac cache to local host/null.
-
 3. Intercept and spoof network traffic to EDR server. (Yup Badass, like a hiest!).
 
 
