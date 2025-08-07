@@ -14,6 +14,9 @@ You MUST have a free pluralsight account to use the online platform. You can att
 `Install-Filebeat.ps1`
 5. Exit the powershell console and double click the ICON ond the desktop for the firefox browser link to the Elastic Stack.
 6. Login with UN: **pslearner** PW: **alwaysbelearning**
+7. Browse in the top left to "DISCOVER"
+8. In the top left, choose the indexe "filebeat-*"
+
 
 You are now ready to go!
 
