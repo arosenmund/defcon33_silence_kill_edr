@@ -6,6 +6,8 @@ start-process -FilePath "C:\OpenEDR-Installation-2.5.1.msi" -ArgumentList "/pass
 
 # Follow Prompts.
 
+start-process -FilePath "C:\Program Files\COMODO\EdrAgentV2\edrsvc.exe" -Wait
+
 Write-host "Starting EDR Service"
 
 Set-service -Name "edrsvc" -StartupType Automatic

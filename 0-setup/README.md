@@ -1,7 +1,7 @@
 # SETUP
 
 ## Pluralsight Lab Environment
-You MUST have a free pluralsight account to use the online platform. You can attempt to follow along on a VM or your own device, but we can't garuntee everything will work.
+You MUST have a free PluralSight account to use the online platform. You can attempt to follow along on a VM or your own device, but we can't guarantee everything will work.
 
 ## Environment Setup
 
