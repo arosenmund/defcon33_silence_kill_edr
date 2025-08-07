@@ -4,9 +4,9 @@
 ![banner](images/edr_slay_banner.png)
 
 
-[Setup](0-setup/README.md)
-[EDR Killing](1-edr-killing/README.md)
-[Custom EDR Evasion](2-custom-edr-evasion/README.md)
+- ### [Setup](0-setup/README.md)
+- ### [EDR Killing](1-edr-killing/README.md)
+- ### [Custom EDR Evasion](2-custom-edr-evasion/README.md)
 ## 🎯 What You’ll Do
 
 Each student will be provisioned their own lab environment to:
