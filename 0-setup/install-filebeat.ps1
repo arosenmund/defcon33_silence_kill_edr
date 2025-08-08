@@ -2,7 +2,7 @@
 
 Write-Host "Starting OpenEDR Install. Follow Prompts."
 
-start-process -FilePath "C:\filebeat-8.12.0-windows-x86_64"  -Wait
+start-process -FilePath "C:\filebeat-8.12.0-windows-x86_64.msi"  -Wait
 
 start-sleep 10
 

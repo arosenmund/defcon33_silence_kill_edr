@@ -1,3 +1,5 @@
+#define UNICODE
+#define _UNICODE
 #include <windows.h>
 #include <psapi.h>
 #include <iostream>

