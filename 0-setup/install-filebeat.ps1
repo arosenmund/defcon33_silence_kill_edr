@@ -21,4 +21,3 @@ C:\Program Files\Elastic\Beats\8.12.0\filebeat\install-service-filebeat.ps1
 Write-Host "Starting Filebeat Service"
 
 Start-Service Filebeat
-
