@@ -1,3 +1,21 @@
+# BYOD
+
+Bring your own Vulnerable Driver.
+
+This is the same method that EDR sandblaster uses to gain control and silence the EDRs, but we are going to dig in just a bit on the function, and how it could be used not just to bypass the EDR but to bypass protected processes like LSASS, in modern windows architectures.
+
+General Process:
+
+1. Load Driver.
+2. Leverage Elevated Driver IOCTL to read memeory directly.
+3. Profit.
+
+First solution, bypasses EDR but not PPL.
+
+Second solution:
+
+
+
 # Signature Evasion
 
 
