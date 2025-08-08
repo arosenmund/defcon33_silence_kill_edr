@@ -22,14 +22,15 @@ filebeat.inputs:
 - type: filestream
 
   # Unique ID among all inputs, an ID is required.
-  id: defcon33-filebeat
+  id: OpenEDR1
 
   # Change to true to enable this input configuration.
-  enabled: false
+  enabled: true
 
   # Paths that should be crawled and fetched. Glob based paths.
   paths:
-    - c:\ProgramData\edrsvc\log\output_events\*.log
+    #- /var/log/*.log
+    - C:\ProgramData\edrsvc\log\output_events\*.log
 
   # Exclude lines. A list of regular expressions to match. It drops the lines that are
   # matching any regular expression from the list.
@@ -81,7 +82,7 @@ setup.template.settings:
 
 # The tags of the shipper are included in their field with each
 # transaction published.
-#tags: ["service-X", "web-tier"]
+tags: ["OpenEDR"]
 
 # Optional fields that you can specify to add additional information to the
 # output.
@@ -138,12 +139,14 @@ setup.kibana:
 output.elasticsearch:
   # Array of hosts to connect to.
   hosts: ["172.31.24.42:9200"]
+
   # Performance preset - one of "balanced", "throughput", "scale",
   # "latency", or "custom".
   preset: balanced
 
   # Protocol - either `http` (default) or `https`.
-  #protocol: "https"
+  protocol: "https"
+  ssl.verification_mode: "none"
 
   # Authentication credentials - either API key or username/password.
   #api_key: "id:api_key"
