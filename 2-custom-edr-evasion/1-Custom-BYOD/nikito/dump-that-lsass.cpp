@@ -8,7 +8,7 @@
 #include <fstream>
 #include <vector>
 #include <psapi.h>
-#include <DbgHelp.h>
+#include <dbghelp.h>
 
 #define XOR_KEY 0x41
 
