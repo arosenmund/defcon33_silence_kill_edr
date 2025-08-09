@@ -38,9 +38,9 @@ Dumping lsass will be the name of the game.
 17. Right click the LSASS process gain, and clikc "Create dump file".  Wait a moment and notice the alert.
 18. Back in your Administrative CMD prompt. Copy dump-that-lsass.exe to the c drive.
 `copy dump-that-lsass.exe c:\dump-that-lsass.exe`
-**Discuss Privilege Error**
-- system-that-lsass execution
-- talk about pp/ppl lsa protection win11/2022
+> **Discuss Privilege Error**
+> - system-that-lsass execution
+> - talk about pp/ppl lsa protection win11/2022
 18. In the adminstrative command prompt run **system-that-lsass.exe**
 `system-that-lsass.exe`
 19. Open windows file explorer and navigate to "C:\Windows\Temp" and open launcher.log and lsass_dumper.log.
@@ -50,9 +50,9 @@ Dumping lsass will be the name of the game.
 22. Decode it with decode-that-lsass.exe.
 `decode-that-lsass.exe`
 22. Go back to the **Operator Desktop**
-**discuss nikito**
-- miniwritedump
-- temp files
+> **discuss nikito**
+> - miniwritedump
+> - temp files
 23. Time for EDR. Back on the **Windows Target 2** device. Install EDR and file beat monitor.
 > [Setup Steps](../../0-setup/README.md)
 24. With EDR installed, use the Administrative command prompt to re-run the system-that-lsass.exe program.
@@ -61,8 +61,8 @@ Dumping lsass will be the name of the game.
 26. In he top left go to discover.
 27. In the top right change the time to the last 15 minutes. (Feel free to play around with this however you want.)
 30. Use free text search to search for "lsass".
-**discuss monitoring vs detection**
-- don't always have to disable
+> **discuss monitoring vs detection**
+> - don't always have to disable
 31. Driver time. Back in the administrative command prompt. Copy the driver to the C:\Windows\Temp folder.
 > make sure you are in the "C:\Users\Public\Desktop\LAB_FILES\2-custom-edr-evasion\1-Custom-BYOD"
 `copy RTCore64.sys c:\Windows\Temp\RTCore64.sys`
@@ -104,9 +104,9 @@ lsass_dumper.exe
 36. Run lsass_dumper.exe
 `lsass_dumper.exe`
 37. Check logs in C:\Windows\Temp\lsass_dumper
-**discuss failure**
-- Check code for driver-dumper in Operator Desktop
-- Talk about BYOD moving forward and whats needed.
+> **discuss failure**
+> - Check code for driver-dumper in Operator Desktop
+> - Talk about BYOD moving forward and whats needed.
 39. Go check for your activity after disabling the edrdrv filter in elasticsearch.
 > Some search terms.
 ```
@@ -115,7 +115,9 @@ lsass_dumper.exe
 lsass_encoded.bin
 ```
 > Run more code and see what does and doesn't pop up. this is the end of this module.
-**Discussion**
+> **Discussion**
+> - did you see sysmon? I saw sysmon...
+> - kill sysmon (not tested we are in this together, awww)
 
 Small pause while we shift gears. Then heading to the custom edr evasion techniques. But keep in mind they are fun and experiemental.
 [Custom API EDR Evastion](../2-Custom-API/README.md)
