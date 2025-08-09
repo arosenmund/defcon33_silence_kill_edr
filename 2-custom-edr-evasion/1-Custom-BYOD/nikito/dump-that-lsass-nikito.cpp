@@ -189,7 +189,7 @@ void DumpAndEncodeMemoryMiniDump(HANDLE hProc, DWORD hPID, std::ofstream& outFil
         dumpType,
         NULL,
         NULL,
-        &callbackInfo
+        NULL
     );
     if (!result){
         // failed minidump
