@@ -46,7 +46,6 @@ To bring up the side panel use "ctl+shft+alt" and then click the "pluralsight" w
 7. Browse in the top left, clikc the "hamburger" and then click "DISCOVER"
 8. In the top left, choose the index "filebeat-*"
 9. You should see events that started when you installed filebeat and continue.
-10. Repeat these steps on **Windows Target 2**
 
 You are now ready to go!
 
