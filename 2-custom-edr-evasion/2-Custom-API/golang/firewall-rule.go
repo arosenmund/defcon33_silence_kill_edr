@@ -28,7 +28,7 @@ func main() {
 
 	// Regex to match lines like:
 	// TCP    192.168.1.100:50497   192.168.1.200:9200   ESTABLISHED     1234
-	re := regexp.MustCompile(`^\s*TCP\s+\S+:(\d+)\s+([\d\.]+):9200\s+\S+\s+\d+`)
+	re := regexp.MustCompile(`^\s*TCP\s+\S+:(\d+)\s+(\[?[\da-fA-F\.:%]+\]?):(9200|5400)\s+\S+\s+\d+$`)
 
 	for scanner.Scan() {
 		line := scanner.Text()
