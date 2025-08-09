@@ -30,26 +30,37 @@ BOOL CALLBACK MiniDumpCallback(
     PMINIDUMP_CALLBACK_INPUT CallbackInput,
     PMINIDUMP_CALLBACK_OUTPUT CallbackOutput
 ) {
-    if (!CallbackOutput || !CallbackInput) 
-        return true;
-    
+    if (!CallbackOutput || !CallbackInput)
+        return TRUE;
+
     switch (CallbackInput->CallbackType) {
-        case ModuleCallback:
-            if (CallbackOutput->ModuleWriteFlags & ModuleReferencedByMemory)
-                CallbackOutput->ModuleWriteFlags &= ~ModuleReferencedByMemory;
-            CallbackOutput->ModuleWriteFlags |= ModuleWriteModule | 
-                                            ModuleWriteMiscRecord | 
-                                            ModuleWriteCvRecord;
-            return true;
-        case ThreadCallback:
-            CallbackOutput->ThreadWriteFlags = ThreadWriteThread | 
+    case ModuleCallback:
+        if (CallbackOutput->ModuleWriteFlags & ModuleReferencedByMemory)
+            CallbackOutput->ModuleWriteFlags &= ~ModuleReferencedByMemory;
+        CallbackOutput->ModuleWriteFlags |= ModuleWriteModule | 
+                                           ModuleWriteMiscRecord | 
+                                           ModuleWriteCvRecord;
+        return TRUE;
+
+    case IncludeModuleCallback:
+        return TRUE;
+
+    case IncludeThreadCallback:
+        return TRUE;
+
+    case ThreadCallback:
+        CallbackOutput->ThreadWriteFlags = ThreadWriteThread | 
                                           ThreadWriteContext | 
                                           ThreadWriteInstructionWindow;
-            return true;
-        default:
-            return true;
+        return TRUE;
+
+    default:
+        CallbackOutput->Status = S_OK;
+        return TRUE;
     }
 }
+
+
 
 void Log(const std::string& msg) {
     std::ofstream log("C:\\Windows\\Temp\\lsass_dumper.log", std::ios::app);
