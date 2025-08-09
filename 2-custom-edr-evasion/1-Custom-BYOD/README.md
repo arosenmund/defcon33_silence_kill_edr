@@ -25,9 +25,9 @@ Dumping lsass will be the name of the game.
 7. In the terminal in the bottom plane, run python simple server to host the files.
 8. Open the 2-custom-edr-evasion>1-Custom-BYOD folder on the left.
 9. Click dump-that-lsass.cpp to open the file.
-**Discuss Signatures**
-- On Disk / In Memory
-- Demo dump-that-lsass execution.
+> **Discuss Signatures**
+> - On Disk / In Memory
+> - Demo dump-that-lsass execution.
 11. Open the **Windows Target 2**
 12. Use the search bar to search for "security" and open the "Windows Security" app.
 13. Go to Virus & Threat Protection and click the "turn on" button.
