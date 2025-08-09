@@ -20,7 +20,7 @@ var (
 )
 
 func main() {
-	flag.StringVar(&watchDir, "dir", `C:\Users\Public`, "Directory to monitor (non-recursive unless -recursive)")
+	flag.StringVar(&watchDir, "dir", `C:\Programdata\edrsvc\log\output_events`, "Directory to monitor (non-recursive unless -recursive)")
 	flag.StringVar(&targetPattern, "match", `*.txt`, "Glob for filenames to delete on change")
 	flag.BoolVar(&recursive, "recursive", false, "Monitor subdirectories recursively")
 	flag.BoolVar(&debugEvents, "debug", true, "Print all file change events")

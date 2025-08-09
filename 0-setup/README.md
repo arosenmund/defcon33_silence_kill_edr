@@ -9,7 +9,7 @@ This does require a free trial. And as of today ( because it used to be differen
 
 https://www.pluralsight.com/individuals/pricing
 
-1. Chose any of these options, 10 day free trial.
+1. Chose the security option, 10 day free trial.
 2. Fill out required information, including the credit card.... I know, I know, but I don't make the rules. Cloud resources do cost money so I kinda get it.
 3. Set a calendar reminder to cancle your subscription. (No, seriously, otherwise you know darn well you won't do it.)
 4. Login and access the lab (Defcon 33 Workshop: Killing and Silencing EDR Agents) at this link.
