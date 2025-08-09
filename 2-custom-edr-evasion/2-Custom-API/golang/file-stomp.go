@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,38 +12,51 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// Configure these:
 var (
-	watchDir      = `C:\ProgramData\edrsvc\log\output_events` // directory to monitor (non-recursive)
-	targetPattern = `*.log`                                   // glob for matching filenames in watchDir
+	watchDir      string
+	targetPattern string
+	recursive     bool
+	debugEvents   bool
 )
 
 func main() {
+	flag.StringVar(&watchDir, "dir", `C:\Users\Public`, "Directory to monitor (non-recursive unless -recursive)")
+	flag.StringVar(&targetPattern, "match", `*.txt`, "Glob for filenames to delete on change")
+	flag.BoolVar(&recursive, "recursive", false, "Monitor subdirectories recursively")
+	flag.BoolVar(&debugEvents, "debug", true, "Print all file change events")
+	flag.Parse()
+
+	// Normalize
+	watchDir = filepath.Clean(watchDir)
+
+	// Open directory for change notifications
 	h, err := windows.CreateFile(
 		windows.StringToUTF16Ptr(watchDir),
 		windows.FILE_LIST_DIRECTORY,
 		windows.FILE_SHARE_READ|windows.FILE_SHARE_WRITE|windows.FILE_SHARE_DELETE,
 		nil,
 		windows.OPEN_EXISTING,
-		// Synchronous (no OVERLAPPED) for simplicity and reliability
-		windows.FILE_FLAG_BACKUP_SEMANTICS,
+		windows.FILE_FLAG_BACKUP_SEMANTICS, // synchronous (no OVERLAPPED)
 		0,
 	)
 	if err != nil {
-		fmt.Printf("[-] Failed to open directory handle: %v\n", err)
+		fmt.Printf("[-] CreateFile(%s) failed: %v\n", watchDir, err)
 		return
 	}
 	defer windows.CloseHandle(h)
 
-	fmt.Printf("[*] Monitoring folder: %s\n", watchDir)
-	fmt.Printf("[*] Using filename glob: %q\n", targetPattern)
+	fmt.Printf("[*] Watching: %s\n", watchDir)
+	fmt.Printf("[*] Match:    %q (case-insensitive)\n", targetPattern)
+	fmt.Printf("[*] Recursive: %v  Debug: %v\n", recursive, debugEvents)
 
 	buf := make([]byte, 64*1024)
 
 	const notifyMask = windows.FILE_NOTIFY_CHANGE_FILE_NAME |
+		windows.FILE_NOTIFY_CHANGE_DIR_NAME |
+		windows.FILE_NOTIFY_CHANGE_ATTRIBUTES |
+		windows.FILE_NOTIFY_CHANGE_SIZE |
 		windows.FILE_NOTIFY_CHANGE_LAST_WRITE |
-		windows.FILE_NOTIFY_CHANGE_CREATION |
-		windows.FILE_NOTIFY_CHANGE_ATTRIBUTES
+		windows.FILE_NOTIFY_CHANGE_CREATION
 
 	for {
 		var bytesReturned uint32
@@ -50,13 +64,13 @@ func main() {
 			h,
 			&buf[0],
 			uint32(len(buf)),
-			false, // non-recursive
+			recursive,
 			notifyMask,
 			&bytesReturned,
-			nil, // overlapped (nil since synchronous)
+			nil, // synchronous
 			0,   // completion routine (uintptr)
 		); err != nil {
-			fmt.Printf("[-] Failed to read directory changes: %v\n", err)
+			fmt.Printf("[-] ReadDirectoryChanges failed: %v\n", err)
 			time.Sleep(250 * time.Millisecond)
 			continue
 		}
@@ -64,22 +78,39 @@ func main() {
 		offset := 0
 		for {
 			info := (*windows.FileNotifyInformation)(unsafe.Pointer(&buf[offset]))
-
-			// FileNameLength is in bytes; convert to UTF-16 length
 			nameLen := int(info.FileNameLength / 2)
 			nameSlice := unsafe.Slice(&info.FileName, nameLen)
 			filename := windows.UTF16ToString(nameSlice)
-			fullPath := filepath.Join(watchDir, filename)
 
-			// Case-insensitive glob match for filename only (not full path)
-			nameLower := strings.ToLower(filename)
+			fullPath := filepath.Join(watchDir, filename)
+			nameLower := strings.ToLower(filepath.Base(filename))
 			patternLower := strings.ToLower(targetPattern)
 			matched, _ := filepath.Match(patternLower, nameLower)
 
+			if debugEvents {
+				fmt.Printf("[evt] action=%d  file=%s  matched=%v\n", info.Action, fullPath, matched)
+			}
+
+			// Many tools: create temp -> write -> rename old -> rename new.
+			// We delete on any of these if the name matches the glob.
 			if matched {
-				fmt.Printf("[+] Detected change (%d) on %s (matches %q). Deleting...\n",
-					info.Action, fullPath, targetPattern)
-				deleteFile(fullPath)
+				switch info.Action {
+				case windows.FILE_ACTION_ADDED,
+					windows.FILE_ACTION_MODIFIED,
+					windows.FILE_ACTION_RENAMED_NEW_NAME,
+					windows.FILE_ACTION_RENAMED_OLD_NAME,
+					windows.FILE_ACTION_REMOVED:
+					// tiny delay in case writer holds a handle
+					time.Sleep(100 * time.Millisecond)
+					if err := os.Remove(fullPath); err != nil {
+						// If it was REMOVED already, this may just fail with not found.
+						if debugEvents {
+							fmt.Printf("[-] Delete failed for %s: %v\n", fullPath, err)
+						}
+					} else {
+						fmt.Printf("[+] Deleted %s (action=%d)\n", fullPath, info.Action)
+					}
+				}
 			}
 
 			if info.NextEntryOffset == 0 {
@@ -90,16 +121,5 @@ func main() {
 				break
 			}
 		}
-	}
-}
-
-func deleteFile(path string) {
-	// Brief delay in case the writer still holds a handle
-	time.Sleep(100 * time.Millisecond)
-
-	if err := os.Remove(path); err != nil {
-		fmt.Printf("[-] Failed to delete file: %v\n", err)
-	} else {
-		fmt.Printf("[+] File deleted: %s\n", path)
 	}
 }
