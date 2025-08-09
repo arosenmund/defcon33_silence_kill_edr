@@ -1,5 +1,32 @@
 # Custom EDR Evasion
 
+Welcome to Custom EDR Evasion. This module of the workshop has two parts. The first, covers EDR evasion through the method that is used by EDR Sandblast to acheive the priveleges required to disable EDR called BYOD. or Bring Your Own Driver.  Then second part goes over different methods of evading EDR or operation on a device that has it, up to and including the concepts of de-hooking.
+
+There is a lot of custom code here, most of it is pre compiled, which means you can just use the program without going through the compile steps, but the compile steps are provdied.  There is intetionally more than we will be able to cover in depth, but it hopefully provides you with inspiration, and a good baseline understanding of this kind of malware development.  The intetn is not to hand you fully function advanced malware, but rather to cover the concepts that advanced malware can/has/will leverage. 
+
+1. ## [Custom BYOD Implementation](./1-Custom-BYOD/README.md)
+2. ## [Custom EDR Evasion Techniques](./2-Custom-API/README.md)
+
+
+
+## Custom EDR Evasion SETUP
+
+1. In the lab environment, open up the **Operator Desktop**, once loaded and the terminal pops up, change the permissions on the lab folder.
+`sudo chown pslearner:pslearner -R /home/pslearner/lab`
+2. Now change directory to that folder.
+`cd /home/pslearner/lab`
+3. Open VSCODE.
+`code .`
+5. Once open, accept any pop ups. Trusting the author etc.
+6. In the top left, use the mouse to click "terminal" then "new terminal" to launch a bash terminal in the bottom pane.
+7. In the terminal in the bottom plane, run python simple server to host the files.
+8. SWITCH TO THE WINDOWS TARGET 2 desktop.
+9. On this windows machine, untouched from the previous activity, open a firefox browser, and browse to http://172.31.24.30:8000
+10. This will bring up the browseable folders with the code so you can download as you edit and compile.
+11. Now, open a command prompt as administrator.  In the search bar in the bottom, type cmd.exe and then right click the result and choose "Run As Administrator"
+12. With that open, you are now ready to begin! 
+
+Proceed to [1-Custom-BYOD](./1-Custom-BYOD/README.md)
 
 
 
@@ -34,22 +61,5 @@ Certain Windows API Calls are hooked by the EDR and the edr is waitning for you 
 
 BYOD
 
-## Custom EDR Evasion SETUP
 
-1. In the lab environment, open up the **Operator Desktop**, once loaded and the terminal pops up, change the permissions on the lab folder.
-`sudo chown pslearner:pslearner -R /home/pslearner/lab`
-2. Now change directory to that folder.
-`cd /home/pslearner/lab`
-3. Open VSCODE.
-`code .`
-5. Once open, accept any pop ups. Trusting the author etc.
-6. In the top left, use the mouse to click "terminal" then "new terminal" to launch a bash terminal in the bottom pane.
-7. In the terminal in the bottom plane, run python simple server to host the files.
-8. SWITCH TO THE WINDOWS TARGET 2 desktop.
-9. On this windows machine, untouched from the previous activity, open a firefox browser, and browse to http://172.31.24.30:8000
-10. This will bring up the browseable folders with the code so you can download as you edit and compile.
-11. Now, open a command prompt as administrator.  In the search bar in the bottom, type cmd.exe and then right click the result and choose "Run As Administrator"
-12. With that open, you are now ready to begin! 
-
-Proceed to [1-Custom-BYOD](./1-Custom-BYOD/README.md)
 
