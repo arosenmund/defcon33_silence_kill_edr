@@ -13,6 +13,10 @@ The flow for this section is as follows:
 - Kill OpenEDR using EDRSandblast
 - Perform actions following the killing of OpenEDR and verifying that the actions do not show up in the EDR's telemetry
 
+## 0 Install Notepad++
+
+
+
 ## 1 Review OpenEDR Logging
 
 OpenEDR has been installed on the Windows host within our lab environment. Let's take a moment to review how OpenEDR operates. To begin, we'll review the logs created by OpenEDR:
@@ -23,7 +27,7 @@ OpenEDR has been installed on the Windows host within our lab environment. Let's
 
     1. `whoami`
   
-    1. `powershell -c "Write-Host 'Testing123'"`
+    1. `powershell -c "Write-Host 'DefCon r0cks!'"`
   
     1. `exit` to exit the PowerShell prompt
 
@@ -31,7 +35,7 @@ OpenEDR has been installed on the Windows host within our lab environment. Let's
 
 1. Navigate to `C:\ProgramData\edrsvc\log\output_events` via Explorer
 
-1. Open the `.log` file for the current day (most _likely_ labeled `2025-08-09.log`) via NotePad++
+1. Open the `.log` file for the current day (most likely labeled `2025-08-09.log`) via NotePad++
 
 1. Search via `Ctrl+F` for the test commands
 
