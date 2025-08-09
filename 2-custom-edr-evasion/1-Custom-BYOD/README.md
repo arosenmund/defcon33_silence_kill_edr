@@ -28,7 +28,7 @@ Dumping lsass will be the name of the game.
 **Discuss Signatures**
 - On Disk / In Memory
 - Demo dump-that-lsass execution.
-11. Open the **Wndows Target 2**
+11. Open the **Windows Target 2**
 12. Use the search bar to search for "security" and open the "Windows Security" app.
 13. Go to Virus & Threat Protection and click the "turn on" button.
 14. Now open an Administrative command prompt by search for cmd.exe, right click the command prompt app and select run as administrator.
