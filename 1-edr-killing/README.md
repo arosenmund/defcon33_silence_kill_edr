@@ -1,8 +1,8 @@
-# EDR Killing
+# EDR Killing and Silencing
 
 ## Overview
 
-In this workshop, we'll be working with the Comodo Security's OpenEDR:
+In this workshop, we'll be working with Comodo Security's OpenEDR:
 - [Website](https://www.openedr.com/)
 - [GitHub repo](https://github.com/ComodoSecurity/openedr)
 
@@ -43,6 +43,8 @@ OpenEDR has been installed on the Windows host within our lab environment. Let's
 
 1. Right-click the `.log` file for the current day (most _likely_ labeled `2025-08-09.log`) and select `Edit with Notepad++`
 
+    - If you're following along after DefCon33, your log file's name will be the current date. It for sure will __not__ be `2025-08-09.log` :).
+
 1. Search via `Ctrl+F` for the test commands:
 
     1. Look for `whoami` and `write-host`
@@ -58,6 +60,8 @@ OpenEDR has been installed on the Windows host within our lab environment. Let's
     - Note that the above example log includes a different execution time from what you'll see in our workshop lab environment. But you get the idea.
 
 **Log review:** Ryan to lead OpenEDR log review with workshop attendees :).
+
+- We'll cover what is being unhooked, why, etc. If you're following along after the workshop... not so much.
 
 ## Source Code Review: EDRSandblast
 
@@ -86,6 +90,7 @@ Let's review the EDRSandblast code!
 1. Right-click the `EDRSandblast.c` file > Select `Open with Code`
 
 **Source code review:**
+
 Ryan to lead EDRSandblast code review with workshop attendees.
 
 ### Bonus: Building EDRSandblast
@@ -100,7 +105,9 @@ However, if you'd like to build it yourself in another environment, the followin
 
 1. Right-click the `EDRSandblast_CLI` directory on the right > `Build`
 
-    - You should now see a build process take place. Example output: `========== Build: 2 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========`
+    - You should now see a build process take place. Example output:
+    
+    `========== Build: 2 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========`
 
 Yeah it's pretty simple... moving along!
 
@@ -124,15 +131,27 @@ Yeah it's pretty simple... moving along!
     
     - **Ryan to review results with class**
     
+    _NOTE:_ If you are following along outside of the PluralSight labs environment, this command will fail due to the offsets of your `Ntoskrnl.exe` and `fltmgr.sys` files not being in `NtoskrnlOffsets.csv` and `FltmgrOffsets.csv`, respectively. The CSV files that we've included for the lab include the offsets for the specific NTOS Kenerl and Filter Manager system driver included in the range environment.
+    
+    If you're running these commands in another system, you'll need to pull the offsets for the given versions of these files within your environment. To do so, you can review [these details](https://github.com/wavestone-cdt/EDRSandblast?tab=readme-ov-file#offsets-retrieval) to learn how to pull your offsets. Alternatively, and to make things much easier, you can simply add `--internet` to the command to automatically retreive the offsets required for your system.
+    
+    E.g. `.\EDRSandblast.exe audit --kernelmode --vuln-driver .\GDRV.sys --internet`
+    
 1. Kill OpenEDR!
 
     - `.\EDRSandblast.exe cmd --kernelmode --vuln-driver .\GDRV.sys`
     
     - You will now have a command prompt executed while OpenEDR is unhooked!
     
+    _NOTE:_ Similar to the note above -- If you are following along outside of the PluralSight labs environment, this command will fail due to the offsets of your `Ntoskrnl.exe` and `fltmgr.sys` files not being in `NtoskrnlOffsets.csv` and `FltmgrOffsets.csv`, respectively. Please see the above note for instructions.
+    
+    Alternatively, you can run `.\EDRSandblast.exe cmd --kernelmode --vuln-driver .\GDRV.sys --internet` to retrieve offsets automatically. Or, you know, just use the PluralSight Labs environment :).
+    
 1. In the new shell (w/OpenEDR killed), run the following commands:
 
     1. `echo Hello01`
+    
+    1. `ping 1.1.1.1 -n 1`
     
     1. `exit` to exit the shell
     
@@ -142,6 +161,8 @@ Yeah it's pretty simple... moving along!
   
     1. `echo Hello02`
     
+    1. `ping 2.2.2.2 -n 1`
+    
     1. `exit` to exit the shell, which will close your prompt window
     
 1. In Explorer, navigate to `C:\ProgramData\edrsvc\log\output_events`
@@ -150,14 +171,32 @@ Yeah it's pretty simple... moving along!
 
 1. Search via `Ctrl+F` for the test commands:
 
-    1. Search for the string `Hello0`
+    1. Search for the strings `Hello0` and `ping`
     
     - Check that out! You should see the following:
     
-        - `echo Hello01` was __not__ logged
-        
-        - `echo Hello02` __was__ logged
+    __NOT__ logged:
+    
+    - `echo Hello01`
+    
+    - `ping 1.1.1.1 -n 1`
+    
+    Logged:
+    
+    - `echo Hello02`
+    
+    - `ping 2.2.2.2 -n 1`
           
 And there we have it!
 
 **Ryan to review results with class**
+
+## 4 EDR Silencing
+
+While killing an EDR typically involves "killing" the ability for the EDR to detect your actions, "silencing" refers to the act of preventing communication between the EDR agent and its could-based tenant.
+
+While I aimed to write up details pertaining to silencing, details related to common silencing methods can be found in [EDR Silencers and Beyond: Exploring Methods to Block EDR Communication - Part 1](https://cloudbrothers.info/en/edr-silencers-exploring-methods-block-edr-communication-part-1/) along with [EDR Silencer and Beyond: Exploring Methods to Block EDR Communication - Part 2](https://academy.bluraven.io/blog/edr-silencer-and-beyond-exploring-methods-to-block-edr-communication-part-2).
+
+We covered these in the DC33 workshop. But if you're reading this after the event, simply review the above article for details.
+
+See also: [EDRSilencer GitHub repo](https://github.com/netero1010/EDRSilencer)
