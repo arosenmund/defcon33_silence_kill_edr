@@ -193,7 +193,7 @@ And there we have it!
 
 ## 4 EDR Silencing
 
-While killing an EDR typically involves "killing" the ability for the EDR to detect your actions, "silencing" refers to the act of preventing communication between the EDR agent and its could-based tenant.
+While killing an EDR typically involves "killing" the ability for the EDR to detect your actions, "silencing" refers to the act of preventing communication between the EDR agent and its cloud-based tenant.
 
 While I aimed to write up details pertaining to silencing, details related to common silencing methods can be found in [EDR Silencers and Beyond: Exploring Methods to Block EDR Communication - Part 1](https://cloudbrothers.info/en/edr-silencers-exploring-methods-block-edr-communication-part-1/) along with [EDR Silencer and Beyond: Exploring Methods to Block EDR Communication - Part 2](https://academy.bluraven.io/blog/edr-silencer-and-beyond-exploring-methods-to-block-edr-communication-part-2).
 
